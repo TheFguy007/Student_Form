@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon Student DB</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    
+    <style>
+        :root {
+            --bg-dark: #020617;       
+            --card-bg: #1e293b;       
+            --text-main: #ffffff;     
+            --accent: #3b82f6;        
+            --accent-hover: #2563eb;
+            --input-bg: #0f172a;      
+            --border-color: #475569;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Outfit', sans-serif;
+            min-height: 100vh;
+        }
+
+        .glass-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+        }
+
+        .stat-box {
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            min-width: 80px;
+        }
+        .stat-label { font-size: 0.75rem; color: #cbd5e1; text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-value { font-size: 1.5rem; font-weight: 700; color: #fff; }
+
+        .form-control, .form-select {
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            color: #ffffff !important; 
+            font-weight: 500;
+        }
+        
+        /* Readonly input style */
+        .form-control:read-only {
+            background-color: #1e293b; 
+            color: #94a3b8 !important;
+            border-color: #334155;
+            cursor: not-allowed;
+        }
+
+        .form-control:focus, .form-select:focus {
+            background-color: var(--input-bg);
+            border-color: var(--accent);
+            color: #ffffff !important;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.4);
+        }
+        
+        ::placeholder { color: #94a3b8 !important; opacity: 1; }
+        label { color: #e2e8f0; font-size: 0.9rem; margin-bottom: 6px; font-weight: 600; }
+
+        .table {
+            --bs-table-bg: transparent;
+            --bs-table-color: white;
+            --bs-table-border-color: #334155;
+        }
+        
+        .table th {
+            color: var(--accent);
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            border-bottom: 2px solid #475569;
+        }
+        
+        .table td {
+            vertical-align: middle;
+            color: white !important; 
+            font-weight: 400;
+        }
+
+        .table-hover tbody tr:hover td {
+            background-color: rgba(59, 130, 246, 0.15);
+            color: white;
+        }
+
+        .badge-minor {
+            background-color: #713f12; 
+            color: #fde047; 
+            border: 1px solid #ca8a04;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .btn-primary { 
+            background-color: var(--accent); 
+            border: none; 
+            font-weight: 600; 
+            padding: 10px;
+        }
+        .btn-primary:hover { background-color: var(--accent-hover); }
+
+        #toast {
+            visibility: hidden;
+            min-width: 250px;
+            background-color: #10b981; 
+            color: white;
+            text-align: center;
+            border-radius: 8px;
+            padding: 12px;
+            position: fixed;
+            z-index: 1000;
+            right: 30px;
+            bottom: 30px;
+            font-weight: 600;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            opacity: 0;
+            transition: opacity 0.3s, bottom 0.3s;
+        }
+        #toast.show { visibility: visible; opacity: 1; bottom: 50px; }
+    </style>
+</head>
+<body>
+
+<div class="container py-5">
+    
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-5">
+            <h1 class="fw-bold text-white mb-0"><i class="bi bi-grid-fill text-primary"></i> Student<span class="text-primary">Hub</span></h1>
+            <p style="color: #cbd5e1;">Manage your class records</p>
+        </div>
+        
+        <div class="col-md-7">
+            <div class="d-flex gap-2 justify-content-end flex-wrap">
+                <div class="stat-box">
+                    <div class="stat-value text-primary" id="totalCount">0</div>
+                    <div class="stat-label">Total</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="bsitCount">0</div>
+                    <div class="stat-label">BSIT</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="bscsCount">0</div>
+                    <div class="stat-label">BSCS</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="bsisCount">0</div>
+                    <div class="stat-label">BSIS</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="bsemcCount">0</div>
+                    <div class="stat-label">EMC</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        
+        <div class="col-lg-4">
+            <div class="glass-card h-100">
+                <h4 class="text-white mb-4 border-bottom border-secondary pb-2">New Student</h4>
+                <form id="studentForm">
+                    <input type="hidden" id="internalId"> 
+                    
+                    <div class="row g-3">
+                        <div class="col-12 d-none" id="idFieldContainer">
+                            <label>Student ID <span class="text-secondary small fw-normal">(Editable)</span></label>
+                            <input type="text" class="form-control" id="displayId">
+                        </div>
+
+                        <div class="col-12">
+                            <label>Full Name</label>
+                            <div class="input-group mb-2">
+                                <input type="text" class="form-control" id="lastName" placeholder="Last Name" required>
+                                <input type="text" class="form-control" id="firstName" placeholder="First Name" required>
+                            </div>
+                            <input type="text" class="form-control" id="middleName" placeholder="Middle Name (Optional)">
+                        </div>
+
+                        <div class="col-6">
+                            <label>Birthdate</label>
+                            <input type="date" class="form-control" id="birthdate" required>
+                        </div>
+                        <div class="col-6">
+                            <label>Year Level</label>
+                            <select class="form-select" id="yearLevel" required>
+                                <option value="1">1st Year</option>
+                                <option value="2">2nd Year</option>
+                                <option value="3">3rd Year</option>
+                                <option value="4">4th Year</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12">
+                            <label>Course Program</label>
+                            <select class="form-select" id="course" required>
+                                <option value="" selected disabled>Select Course...</option>
+                                <option value="BSIT">BS Information Technology</option>
+                                <option value="BSCS">BS Computer Science</option>
+                                <option value="BSIS">BS Information Systems</option>
+                                <option value="BSEMC">BS EMC</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 d-grid gap-2">
+                        <button type="submit" class="btn btn-primary shadow-lg" id="actionBtn">
+                            <i class="bi bi-plus-circle-fill"></i> Add Student
+                        </button>
+                        <button type="button" class="btn btn-outline-light d-none" id="cancelBtn" onclick="resetForm()">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="glass-card h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="text-white mb-0">Records</h4>
+                    
+                    <div class="input-group" style="width: 250px;">
+                        <span class="input-group-text bg-dark border-secondary text-white"><i class="bi bi-search"></i></span>
+                        <input type="text" id="searchInput" class="form-control border-secondary text-white" placeholder="Search ID or Name..." onkeyup="filterStudents()">
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th style="width: 15%;">Student ID</th>
+                                <th style="width: 35%;">Student Name</th>
+                                <th style="width: 10%;">Age</th>
+                                <th style="width: 25%;">Course & Year</th>
+                                <th style="width: 15%;" class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentTableBody">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="toast">Action Successful!</div>
+
+<script>
+    // --- State & Variables ---
+    let students = [];
+    let isEditing = false;
+    let editId = null;
+
+    const studentForm = document.getElementById('studentForm');
+    const tableBody = document.getElementById('studentTableBody');
+    const actionBtn = document.getElementById('actionBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    
+    // Target the container for the ID input
+    const idContainer = document.getElementById('idFieldContainer');
+
+    // --- On Load ---
+    window.onload = function() {
+        loadData();
+    };
+
+    // --- Core Logic ---
+
+    // 1. Safe Load from Storage
+    function loadData() {
+        try {
+            const stored = localStorage.getItem('highContrastStudents');
+            if (stored) {
+                students = JSON.parse(stored);
+            }
+        } catch (e) {
+            console.error("Data corrupted, resetting.");
+            students = [];
+        }
+        renderTable(students);
+        updateStats();
+    }
+
+    // 2. Save to Storage
+    function saveData() {
+        try {
+            localStorage.setItem('highContrastStudents', JSON.stringify(students));
+            updateStats();
+        } catch (e) {
+            alert("Error saving data. Storage might be full.");
+        }
+    }
+
+    // 3. Update Stats
+    function updateStats() {
+        document.getElementById('totalCount').textContent = students.length;
+        document.getElementById('bsitCount').textContent = students.filter(s => s.course === 'BSIT').length;
+        document.getElementById('bscsCount').textContent = students.filter(s => s.course === 'BSCS').length;
+        document.getElementById('bsisCount').textContent = students.filter(s => s.course === 'BSIS').length;
+        document.getElementById('bsemcCount').textContent = students.filter(s => s.course === 'BSEMC').length;
+    }
+
+    // 4. Calculate Age
+    function calculateAge(birthdate) {
+        const today = new Date();
+        const birthDate = new Date(birthdate);
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const m = today.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+        return age;
+    }
+
+    // 5. Generate Automated ID
+    function generateStudentId() {
+        const year = new Date().getFullYear();
+        const randomNum = Math.floor(1000 + Math.random() * 9000);
+        return `${year}-${randomNum}`;
+    }
+
+    // 6. Form Handling
+    studentForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        const lName = document.getElementById('lastName').value.trim();
+        const fName = document.getElementById('firstName').value.trim();
+        const mName = document.getElementById('middleName').value.trim();
+        const bDate = document.getElementById('birthdate').value;
+        const course = document.getElementById('course').value;
+        const year = document.getElementById('yearLevel').value;
+
+        // Validation: Future Date
+        if(new Date(bDate) > new Date()) {
+            showToast("Birthdate cannot be in the future!", "error");
+            return;
+        }
+
+        // Validation: Duplicate Name
+        const fullName = `${lName}, ${fName}`.toLowerCase();
+        const nameDuplicate = students.find(s => {
+            const sName = `${s.lastName}, ${s.firstName}`.toLowerCase();
+            return isEditing ? (sName === fullName && s.id !== editId) : (sName === fullName);
+        });
+
+        if (nameDuplicate) {
+            showToast("Student with this name already exists!", "error");
+            return;
+        }
+
+        let studentData = { 
+            lastName: lName, 
+            firstName: fName, 
+            middleName: mName, 
+            birthdate: bDate, 
+            course, 
+            year 
+        };
+
+        if (isEditing) {
+            // --- EDIT FLOW ---
+            
+            // 1. Get the manually edited ID
+            const editedId = document.getElementById('displayId').value.trim();
+            
+            // 2. Validate Empty ID
+            if (!editedId) {
+                showToast("Student ID cannot be empty!", "error");
+                return;
+            }
+
+            // 3. Validate Duplicate ID (Check if this ID belongs to someone else)
+            const idDuplicate = students.find(s => s.studentNo === editedId && s.id !== editId);
+            if (idDuplicate) {
+                showToast("This Student ID is already taken!", "error");
+                return;
+            }
+
+            // 4. Update
+            const index = students.findIndex(s => s.id === editId);
+            if(index !== -1) {
+                studentData.studentNo = editedId; // Use the edited ID
+                students[index] = { id: editId, ...studentData };
+            }
+            showToast("Student updated!");
+
+        } else {
+            // --- ADD FLOW ---
+            const newIdNo = generateStudentId();
+            studentData.studentNo = newIdNo;
+            students.push({ id: Date.now(), ...studentData });
+            showToast(`Student added! ID: ${newIdNo}`);
+        }
+
+        saveData();
+        renderTable(students);
+        resetForm();
+    });
+
+    // 7. Render Table
+    function renderTable(dataArray) {
+        tableBody.innerHTML = "";
+        
+        if (!dataArray || dataArray.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="5" class="text-center py-4" style="color:#94a3b8;">No records found. Add a student to begin.</td></tr>`;
+            return;
+        }
+
+        dataArray.forEach((s) => {
+            const age = calculateAge(s.birthdate);
+            const isMinor = age < 18;
+            
+            const initials = (s.firstName[0] || "") + (s.lastName[0] || "");
+            const mInitial = s.middleName ? s.middleName[0] + '.' : '';
+            const minorBadge = isMinor ? `<span class="badge-minor ms-2">MINOR</span>` : '';
+            const displayId = s.studentNo ? s.studentNo : "N/A";
+
+            const row = `
+                <tr>
+                    <td class="font-monospace text-warning">${displayId}</td>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <div class="rounded-circle bg-dark border border-secondary d-flex align-items-center justify-content-center me-3 text-white fw-bold" style="width:35px; height:35px; font-size: 0.8rem;">
+                                ${initials.toUpperCase()}
+                            </div>
+                            <div>
+                                <span class="fw-bold text-white">${s.lastName}</span>, ${s.firstName} ${mInitial}
+                                ${minorBadge}
+                            </div>
+                        </div>
+                    </td>
+                    <td>${age}</td>
+                    <td>
+                        <div class="text-white">${s.course}</div>
+                        <div class="small" style="color:#cbd5e1;">Year ${s.year}</div>
+                    </td>
+                    <td class="text-end">
+                        <button class="btn btn-sm btn-outline-info border-0 me-1" onclick="editTrigger(${s.id})">
+                            <i class="bi bi-pencil-square"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger border-0" onclick="deleteStudent(${s.id})">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+            tableBody.innerHTML += row;
+        });
+    }
+
+    // 8. Search
+    function filterStudents() {
+        const term = document.getElementById('searchInput').value.toLowerCase();
+        const filtered = students.filter(s => 
+            s.lastName.toLowerCase().includes(term) || 
+            s.firstName.toLowerCase().includes(term) ||
+            (s.studentNo && s.studentNo.includes(term))
+        );
+        renderTable(filtered);
+    }
+
+    // 9. Delete
+    function deleteStudent(id) {
+        if(confirm("Permanently delete this student?")) {
+            students = students.filter(s => s.id !== id);
+            if(isEditing && editId === id) resetForm(); 
+            saveData();
+            renderTable(students);
+            showToast("Record deleted", "error");
+        }
+    }
+
+    // 10. Edit
+    function editTrigger(id) {
+        const s = students.find(item => item.id === id);
+        if(!s) return;
+
+        document.getElementById('internalId').value = s.id;
+        
+        // SHOW ID FIELD (and it is now editable)
+        idContainer.classList.remove('d-none');
+        document.getElementById('displayId').value = s.studentNo || "Legacy Record";
+
+        document.getElementById('lastName').value = s.lastName;
+        document.getElementById('firstName').value = s.firstName;
+        document.getElementById('middleName').value = s.middleName;
+        document.getElementById('birthdate').value = s.birthdate;
+        document.getElementById('course').value = s.course;
+        document.getElementById('yearLevel').value = s.year;
+
+        isEditing = true;
+        editId = id;
+
+        actionBtn.innerHTML = `<i class="bi bi-check-lg"></i> Update Student`;
+        actionBtn.classList.replace('btn-primary', 'btn-success');
+        cancelBtn.classList.remove('d-none');
+        
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // 11. Reset
+    function resetForm() {
+        studentForm.reset();
+        isEditing = false;
+        editId = null;
+        document.getElementById('internalId').value = "";
+        
+        // HIDE ID FIELD because we are adding new
+        idContainer.classList.add('d-none');
+        document.getElementById('displayId').value = "";
+        
+        actionBtn.innerHTML = `<i class="bi bi-plus-circle-fill"></i> Add Student`;
+        actionBtn.classList.replace('btn-success', 'btn-primary');
+        cancelBtn.classList.add('d-none');
+    }
+
+    // 12. Toast Helper
+    function showToast(msg, type = 'success') {
+        const toast = document.getElementById("toast");
+        toast.textContent = msg;
+        toast.style.backgroundColor = type === 'error' ? '#ef4444' : '#10b981';
+        toast.className = "show";
+        setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 3000);
+    }
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
